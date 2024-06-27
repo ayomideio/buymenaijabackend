@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Chat</title>
+    <!-- Include Socket.io client library -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js" integrity="sha384-2huaZvOR9iDzHqslqwpR87isEmrfxqyWOF7hr7BY6KG0+hVKLoEXMPUJw3ynWuhO" crossorigin="anonymous"></script>
+    <style>
+        /* CSS for chat messages */
+        .message {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+  <div id="messages"></div>
+  <form id="message-form">
+      <input type="text" id="message-input" placeholder="Type your message">
+      <button type="submit">Send</button>
+  </form>
+
+  <script>
+      const socket = new WebSocket('ws://localhost:3000'); // Replace with your WebSocket server URL
+
+      socket.onopen = () => {
+          console.log('WebSocket connection established.');
+      };
+
+      socket.onmessage = (event) => {
+          const message = JSON.parse(event.data);
+          displayMessage(message);
+      };
+
+      socket.onclose = () => {
+          console.log('WebSocket connection closed.');
+      };
+
+      socket.onerror = (error) => {
+          console.error('WebSocket error:', error);
+      };
+
+      const displayMessage = (message) => {
+          const messagesDiv = document.getElementById('messages');
+          const messageElement = document.createElement('div');
+          messageElement.textContent = `${message.username}: ${message.text}`;
+          messagesDiv.appendChild(messageElement);
+      };
+
+      const sendMessage = (event) => {
+          event.preventDefault();
+          const messageInput = document.getElementById('message-input');
+          const message = messageInput.value.trim();
+          if (message) {
+              socket.send(JSON.stringify({ text: message }));
+              messageInput.value = '';
+          }
+      };
+
+      document.getElementById('message-form').addEventListener('submit', sendMessage);
+  </script>
+</body>
+</html>

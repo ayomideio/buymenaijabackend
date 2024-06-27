@@ -1,0 +1,162 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  firstName      String?
+  lastName    String?
+  phoneNumber   String?
+  address   String?
+  businessName  String?
+  state String?
+  avatar  String?
+  commission  Int?
+  lga String?
+  city String?
+  referralId String?
+  instagram String?
+  facebook String?
+  twitter  String?
+  whatsapp String?
+  isVerified Boolean @default(false)
+  status Boolean @default(true)
+  otp           String?
+  otpExpiresAt  DateTime?
+  role      Role     @default(USER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+
+  Purchase   Purchase[]
+  UserTokens UserTokens[]
+  Products      Product[]  @relation("UserProducts")
+  Subscriptions Subscription[]
+}
+model Subscription {
+  id             String    @id @default(uuid())
+  userId         String
+  plan           SubscriptionPlan
+  status         SubscriptionStatus @default(ACTIVE)
+  startDate      DateTime @default(now())
+  endDate        DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now())
+  price          Decimal?
+
+  user           User      @relation(fields: [userId], references: [id])
+}
+model Room {
+  id        String   @id @default(uuid())
+  roomId    String   @unique
+  createdBy String
+  createdDate DateTime
+  participants Participant[]
+  messages   Message[]
+}
+
+model Participant {
+  id        String   @id @default(uuid())
+  roomId    String
+  socketId  String
+  username  String
+  avatar    String
+  connected Boolean
+  createdAt DateTime @default(now())
+
+  room      Room     @relation(fields: [roomId], references: [id])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  roomId    String
+  order     Int
+  username  String
+  avatar    String
+  content   String
+  createdAt DateTime @default(now())
+
+  room      Room     @relation(fields: [roomId], references: [id])
+}
+model UserTokens {
+  id String @id @default(uuid())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  refreshToken String
+  family       String   @unique
+  browserInfo  String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+}
+
+model Product {
+  id                 String     @id @default(uuid())
+  name               String     @unique
+  urlName            String     @unique
+  picture            String[]
+  basePrice          Decimal
+  discountPercentage Int        @default(0)
+  stock              Int        @default(0)
+
+  description        String?
+  shortDescription    String?
+  longDescription    String?
+  specifications     Json?
+  createdAt          DateTime   @default(now())
+ user               User?      @relation(fields: [userId], references: [id], onDelete: SetNull, name: "UserProducts")
+  userId             String?
+  categories         Category[]
+  Purchase           Purchase[]
+}
+
+model Category {
+  id       String    @id @default(uuid())
+  name     String    @unique
+  subCategory String?
+  status    Boolean @default(true)
+  products Product[]
+}
+
+model Purchase {
+  id String @id @default(uuid())
+
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId String?
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+
+  amount        Int      @default(1)
+  totalPrice    Decimal
+  reviewNote    Int?
+  reviewComment String?
+  createdAt     DateTime @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+  SELLER
+  AGENT
+}
+enum SubscriptionPlan {
+  BASIC
+  STANDARD
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  INACTIVE
+  CANCELED
+}
